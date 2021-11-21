@@ -41,6 +41,8 @@ module controller(input       clk, reset,
   maindec md(clk, reset, op, pcwrite, memwrite, irwrite, regwrite, alusrca, branch, iord,
 	     memtoreg, regdst, alusrcb, pcsrc, aluop);
   aludec ad(funct, aluop, alucontrol);
+
+  assign pcen = pcwrite | (branch & zero);
  
 endmodule
 

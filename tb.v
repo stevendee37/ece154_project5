@@ -1,26 +1,26 @@
 module tb();
-  reg clk; 
+  reg clk;
   reg reset;
 
   wire [31:0] writedata, dataadr;
   wire memwrite;
 
-  reg [31:0] cycle;
-
+  // instantiate device to be tested
   top dut(clk, reset, writedata, dataadr, memwrite);
 
+  // initialize test
   initial
     begin
-      reset <= 1; #12; reset <= 0;
-        cycle <= 1;
+      reset <= 1; #22; reset <= 0;
     end
 
+  // generate clock to sequence tests
   always
     begin
       clk <= 1; #5; clk <= 0; #5;
-        cycle <= cycle + 1;
     end
 
+  // check results
   always@(negedge clk)
     begin
       if (memwrite) begin
@@ -33,4 +33,5 @@ module tb();
 	end
       end
     end
-endmodule 
+endmodule
+

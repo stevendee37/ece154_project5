@@ -5,59 +5,61 @@ module maindec(input clk, reset,
 	       output MemtoReg, RegDst,
 	       output [1:0] ALUSrcB, PCSrc, ALUOp);
 
-  reg [14:0] controls;
-  reg [3:0] state, nextState;
-  assign {PCWrite, MemWrite, IRWrite, RegWrite, ALUSrcA, Branch,
-	  IorD, MemtoReg, RegDst, ALUSrcB, PCSrc, ALUOp} = controls;
+  reg [16:0] controls;
+  reg [4:0] state, nextState;
 
-  always@(posedge clk or posedge reset) begin
-    if(reset) state <= 4'h5010;
+  always @(posedge clk or posedge reset) begin
+    if(reset) state <= 5'b00000;
     else state <= nextState;
   end
   
   always@(*) begin
     case(state)
-	4'h5010: nextState <= 4'h0030;			// State 0: Fetch
-	4'h0030: case(op)				// State 1: Decode
-			6'b000000: nextState <= 4'h0402;		// R-Type
-			6'b100011: nextState <= 4'h0420;		// lw
-			6'b101011: nextState <= 4'h0420;		// sw
-			6'b000100: nextState <= 4'h0605;		// beq
-			6'b001000: nextState <= 4'h0420;		// addi
-			6'b000010: nextState <= 4'h4008;		// j
-			default: nextState <= 4'hxxxx;			// Should never happen
+	5'b00000: nextState <= 5'b00001;			// State 0: Fetch
+	5'b00001: case(op)				// State 1: Decode
+			6'b000000: nextState <= 5'b00110;		// R-Type
+			6'b100011: nextState <= 5'b00010;		// lw
+			6'b101011: nextState <= 5'b00010;		// sw
+			6'b000100: nextState <= 5'b01000;		// beq
+			6'b001000: nextState <= 5'b01001;		// addi
+			6'b000010: nextState <= 5'b01011;		// j
+			default: nextState <= 5'bxxxxx;			// Should never happen
 			endcase
-	4'h0420: case(op)				// State 2: MemAdr
-			6'b100011: nextState <= 4'h0100;		// lw
-			6'b101011: nextState <= 4'h2100;		// sw
-			default: nextState <= 4'hxxxx;			// Should never happen
+	5'b00010: case(op)				// State 2: MemAdr
+			6'b100011: nextState <= 5'b00011;		// lw
+			6'b101011: nextState <= 5'b00101;		// sw
+			default: nextState <= 5'bxxxxx;			// Should never happen
 			endcase
-	4'h0100: nextState <= 4'h0880;			// State 3: MemRead
-	4'h0880: nextState <= 4'h5010;			// State 4: MemWriteback
-	4'h2100: nextState <= 4'h5010;			// State 5: MemWrite
-	4'h0402: nextState <= 4'h0840;			// State 6: Execute
-	4'h0840: nextState <= 4'h5010;			// State 7: ALUWriteback
-	4'h0605: nextState <= 4'h5010;			// State 8: Branch
-	4'h0420: nextState <= 4'h0800;			// State 9: ADDIExecute
-	4'h0800: nextState <= 4'h5010;			// State 10: ADDIWriteback
-	4'h4008: nextState <= 4'h5010;			// State 11: Jump
-	default: nextState <= 4'hxxxx;			// Should never happen
+	5'b00011: nextState <= 5'b00100;			// State 3: MemRead
+	5'b00100: nextState <= 5'b00000;			// State 4: MemWriteback
+	5'b00101: nextState <= 5'b00000;			// State 5: MemWrite
+	5'b00110: nextState <= 5'b00111;			// State 6: Execute
+	5'b00111: nextState <= 5'b00000;			// State 7: ALUWriteback
+	5'b01000: nextState <= 5'b00000;			// State 8: Branch
+	5'b01001: nextState <= 5'b01010;			// State 9: ADDIExecute
+	5'b01010: nextState <= 5'b00000;			// State 10: ADDIWriteback
+	5'b01011: nextState <= 5'b00000;			// State 11: Jump
+	default: nextState <= 5'b00000;			// Should never happen
     endcase
   end
 
+  assign {PCWrite, MemWrite, IRWrite, RegWrite, ALUSrcA, Branch,
+	  IorD, MemtoReg, RegDst, ALUSrcB, PCSrc, ALUOp} = controls;
+
   always@(*) begin
     case(state)
-	4'h5010: controls <= 15'b101000000010000;	// Fetch
-	4'h0030: controls <= 15'b000000000110000;	// Decode
-	4'h0420: controls <= 15'b000010000100000;	// MemAdr and AddiEx
-	4'h0100: controls <= 15'b000000100000000;	// MemRd
-	4'h0880: controls <= 15'b000100010000000;	// MemWb
-	4'h2100: controls <= 15'b010000100000000;	// MemWr
-	4'h0402: controls <= 15'b000010000000010;	// RtypeEx
-	4'h0840: controls <= 15'b000100001000000;	// RtypeWb
-	4'h0605: controls <= 15'b000011000000101;	// BeqEx
-	4'h0800: controls <= 15'b000100000000000;       // AddiWB
-	4'h4008: controls <= 15'b100000000001000;	// JEx
+	5'b00000: controls <= 15'b101000000010000;	// Fetch
+	5'b00001: controls <= 15'b000000000110000;	// Decode
+	5'b00010: controls <= 15'b000010000100000;	// MemAdr
+	5'b00011: controls <= 15'b000000100000000;	// MemRd
+	5'b00100: controls <= 15'b000100010000000;	// MemWb
+	5'b00101: controls <= 15'b010000100000000;	// MemWr
+	5'b00110: controls <= 15'b000010000000010;	// RtypeEx
+	5'b00111: controls <= 15'b000100001000000;	// RtypeWb
+	5'b01000: controls <= 15'b000011000000101;	// BeqEx
+	5'b01001: controls <= 15'b000010000100000;	// AddiEx
+	5'b01010: controls <= 15'b000100000000000;      // AddiWB
+	5'b01011: controls <= 15'b100000000001000;	// JEx
 	default: controls <= 15'bxxxxxxxxxxxxxxx;	// Should never happen
     endcase
   end
@@ -82,7 +84,5 @@ module aludec(input [5:0] funct,
     endcase
   end
 endmodule
-	
-
 			
 	
