@@ -7,16 +7,19 @@ module maindec(input clk, reset,
 
   reg [16:0] controls;
   reg [4:0] state, nextState;
-
+  
+  // Assigns controller to appropriate state based on value of reset or nextState. 
   always @(posedge clk or posedge reset) begin
     if(reset) state <= 5'b00000;
     else state <= nextState;
   end
   
   always@(*) begin
+    // Case statement determines what the next state of the controller should be based on the current state.
+    // For states that have multiple branches, the 6 bit op input is used to determine what branch should be taken.
     case(state)
 	5'b00000: nextState <= 5'b00001;			// State 0: Fetch
-	5'b00001: case(op)				// State 1: Decode
+	5'b00001: case(op)					// State 1: Decode
 			6'b000000: nextState <= 5'b00110;		// R-Type
 			6'b100011: nextState <= 5'b00010;		// lw
 			6'b101011: nextState <= 5'b00010;		// sw
@@ -25,7 +28,7 @@ module maindec(input clk, reset,
 			6'b000010: nextState <= 5'b01011;		// j
 			default: nextState <= 5'bxxxxx;			// Should never happen
 			endcase
-	5'b00010: case(op)				// State 2: MemAdr
+	5'b00010: case(op)					// State 2: MemAdr
 			6'b100011: nextState <= 5'b00011;		// lw
 			6'b101011: nextState <= 5'b00101;		// sw
 			default: nextState <= 5'bxxxxx;			// Should never happen
@@ -43,10 +46,14 @@ module maindec(input clk, reset,
     endcase
   end
 
+  // Assigns the binary values stored in controls to the appropriate outputs.
   assign {PCWrite, MemWrite, IRWrite, RegWrite, ALUSrcA, Branch,
 	  IorD, MemtoReg, RegDst, ALUSrcB, PCSrc, ALUOp} = controls;
 
   always@(*) begin
+    // Using the current state, determines what the main decoder control output should be,
+    // and assigns to the controls variable. Each bit represents a different output of the 
+    // controller. 
     case(state)
 	5'b00000: controls <= 15'b101000000010000;	// Fetch
 	5'b00001: controls <= 15'b000000000110000;	// Decode
@@ -69,10 +76,12 @@ module aludec(input [5:0] funct,
 	      input [1:0] aluop,
 	      output reg [2:0] alucontrol);
   
+  // Uses the funct and aluop inputs to determine the alucontrol output,
+  // which is used to determine what action the ALU will take given inputs. 
   always@(*) begin
     case(aluop)
-	2'b00: alucontrol <= 3'b010;
-	2'b01: alucontrol <= 3'b110;
+	2'b00: alucontrol <= 3'b010;  // add
+	2'b01: alucontrol <= 3'b110;  // sub
 	default: case(funct)
 		6'b100000: alucontrol <= 3'b010; // add
         	6'b100010: alucontrol <= 3'b110; // sub
