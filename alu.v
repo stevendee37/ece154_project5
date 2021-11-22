@@ -1,3 +1,4 @@
+// ALU Module from Lab 1
 module alu (input [31:0] a, b, input [2:0] f, output reg [31:0] y, output zero) ;
   wire [31:0] BB ;
   wire [31:0] S ;
