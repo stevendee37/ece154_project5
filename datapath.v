@@ -1,3 +1,4 @@
+// Register file module
 module regfile(input clk, 
 	       input we3, 
 	       input [4:0] ra1, ra2, wa3,
@@ -11,16 +12,19 @@ module regfile(input clk,
   assign rd2 = (ra2 != 0) ? rf[ra2] : 0;
 endmodule
 
+// Left shifter module (shifts left by 2)
 module sl2(input [31:0] a,
 	   output [31:0] y);
   assign y = {a[29:0], 2'b00};
 endmodule 
 
+// Sign extension module, extends 16 bit value to 32 bits
 module signext(input [15:0] a,
 	       output [31:0] y);
   assign y = {{16{a[15]}}, a};
 endmodule
 
+// Resetable flip flop, with variable width (default width of 8)
 module flopr #(parameter WIDTH=8)
 	   (input clk, reset,
 	    input [WIDTH-1:0] d,
@@ -30,6 +34,7 @@ module flopr #(parameter WIDTH=8)
     else      q <= d;
 endmodule
 
+// Resetable flip flop with enable and variable width (default width of 8)
 module flopenr #(parameter WIDTH=8)
 		(input clk, reset,
 	   	 input en, 	
@@ -40,6 +45,7 @@ module flopenr #(parameter WIDTH=8)
     else if (en) q <= d;
 endmodule
 
+// 2:1 multiplexer with variable width (default width of 8)
 module mux2 #(parameter WIDTH = 8)
 	     (input [WIDTH-1:0] d0, d1,
 	      input s,
@@ -47,6 +53,7 @@ module mux2 #(parameter WIDTH = 8)
   assign y = s ? d1 : d0;
 endmodule
 
+// 3:1 multiplexer with variable width (default width of 8)
 module mux3 #(parameter WIDTH = 8)
 	     (input [WIDTH-1:0] d0, d1, d2,
 	      input [1:0] s,
@@ -54,6 +61,7 @@ module mux3 #(parameter WIDTH = 8)
   assign #1 y = s[1] ? d2 : (s[0] ? d1 : d0);
 endmodule;
 
+// 4:1 multiplexer with variable width (default width of 8)
 module mux4 #(parameter WIDTH = 8)
 	     (input [WIDTH-1:0] d0, d1, d2, d3, 
 	      input [1:0] s,
